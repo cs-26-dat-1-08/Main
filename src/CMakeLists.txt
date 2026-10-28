@@ -1,0 +1,6 @@
+add_library(osmlib osmlib.c)
+target_include_directories(osmlib PUBLIC .)
+add_library(algorithms algorithms.c)
+target_include_directories(algorithms PUBLIC .)
+add_executable(main main.c)
+target_link_libraries(main osmlib algorithms)
