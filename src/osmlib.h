@@ -1,20 +1,19 @@
 #include <sys/types.h>
 
-typedef struct NODE node;
-typedef struct ROAD road;
+struct road; // Forward declaration
 
-struct NODE {
-  road* connects;
+typedef struct node {
+  struct road *connects;
   uint amountOfConnects;
   double lattitude, longitude;
-};
+} node;
 
-struct ROAD {
+typedef struct road {
   int is_salted, prio;
-  node *startNode, endNode;
+  node *startNode, *endNode;
   double length;
-};
+} road;
 
-road* setup(void);
-double distance(node* node1, node* node2);
-double findLength(road* road);
+struct road* setup(void);
+double distance(struct node* node1, struct node* node2);
+double findLength(struct road* road);

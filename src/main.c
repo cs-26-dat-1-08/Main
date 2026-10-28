@@ -1,4 +1,3 @@
-#include "osmlib.h"
 #include "algorithms.h"
 
 int main(void){
