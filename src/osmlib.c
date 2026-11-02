@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,17 +7,18 @@
 #include "osmlib.h"
 
 #define MAX_NODES_IN_ROAD 100
-
-void buildroad(protoroad *awesome, uint size, int *nodes){
-  int newNodes[size];
+void buildroad(protoroad *awesome, uint size, uint_fast32_t *nodes){
+  uint_fast32_t newNodes[size];
   for(int i = 0; i < size; ++i)
     newNodes[i] = nodes[i];
   awesome->nodeAmount = size;
   awesome->nodeIds = newNodes;
+  return;
 }
-void setup(protoroad **roads, node **nodes, char *filename){
-  int nodeindex = 0, roadindex = 0;
-
+void setup(protoroad *roads[], node *nodes[], char *filename){
+  uint_fast32_t nodeindex = 0, roadindex = 0;
+  
+  // xmlDoc *document = xmlReadFile(filename, NULL, 0);
   xmlDoc *document = xmlReadFile(filename, NULL, XML_PARSE_NOBLANKS);
   xmlNode *root = xmlDocGetRootElement(document);
 
@@ -30,8 +32,8 @@ void setup(protoroad **roads, node **nodes, char *filename){
         break;
       case 0: // Way
         roads[roadindex]->id = atoi((char*)xmlGetProp(node, (const xmlChar*)"id"));
-        int ids[MAX_NODES_IN_ROAD];
-        uint count = 0;
+        uint_fast32_t ids[MAX_NODES_IN_ROAD];
+        uint_fast8_t count = 0;
         for (xmlNode *roadchild = node->children; roadchild; roadchild = roadchild->next){
           if(strcmp((char*)roadchild->name, "nd")) continue;
           ids[count] = atoi((char*)xmlGetProp(roadchild, (const xmlChar*)"ref"));
@@ -44,9 +46,8 @@ void setup(protoroad **roads, node **nodes, char *filename){
         break;
     }
   }
-  printf("Total nodes: %i\n",nodeindex);
-  printf("Total roads: %i\n",roadindex);
-  fprintf(stdout, "...\n");
+  fprintf(stdout, "Total nodes: %lu\n", nodeindex);
+  fprintf(stdout, "Total roads: %lu\n", roadindex);
   return;
 }
 
