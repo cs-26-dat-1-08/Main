@@ -12,12 +12,12 @@ int main(int arga, char** argb){
   // node *nodes = malloc(MAXNODES*sizeof(node));
   // protoroad *roads = malloc(MAXNODES*sizeof(protoroad));
 
-  static node *nodes[MAXNODES];
-  static protoroad *roads[MAXROADS];
+  static node_t *nodes[MAXNODES];
+  static protoroad_t *roads[MAXROADS];
   for(int i = 0; i < MAXNODES; ++i)
-    nodes[i] = malloc(sizeof(node));
+    nodes[i] = malloc(sizeof(node_t));
   for(int i = 0; i < MAXROADS; ++i)
-    roads[i] = malloc(sizeof(protoroad));
+    roads[i] = malloc(sizeof(protoroad_t));
   
   
   switch (arga){

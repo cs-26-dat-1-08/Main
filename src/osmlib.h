@@ -8,24 +8,24 @@ typedef struct node {
   struct road *connects;
   uint_fast8_t amountOfConnects;
   double lattitude, longitude;
-} node;
+} node_t;
 
 typedef struct protoroad {
   int id;
   uint_fast8_t prio;
   uint_fast8_t nodeAmount;
   uint_fast32_t *nodeIds;
-} protoroad;
+} protoroad_t;
 
 typedef struct road {
   uint_fast32_t id;
   uint_fast8_t is_salted, prio;
-  node *startNode, *endNode;
+  node_t *startNode, *endNode;
   float length;
-} road;
+} road_t;
 
-void setup(protoroad *roads[], node *nodes[], char *filename);
-double distance(struct node* node1, struct node* node2);
-double findLength(struct road* road);
+void setup(protoroad_t *roads[], node_t *nodes[], char *filename);
+double distance(node_t* node1, node_t* node2);
+double findLength(road_t* road);
 
 void parse();
