@@ -7,7 +7,7 @@ typedef struct node {
   uint_fast32_t id;
   struct road *connects;
   uint_fast8_t amountOfConnects;
-  double lattitude, longitude;
+  double latitude, longitude;
 } node_t;
 
 typedef struct protoroad {
@@ -26,6 +26,6 @@ typedef struct road {
 
 void setup(protoroad_t *roads[], node_t *nodes[], char *filename);
 double distance(node_t* node1, node_t* node2);
-double findLength(road_t* road);
+double findLength(protoroad_t* road);
 
 void parse();

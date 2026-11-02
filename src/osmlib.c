@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 
 #include "osmlib.h"
 
+#define EARTH_RADIUS 6371009
 // There are a maximum of 2000 nodes per road by the current standards. There can also be a larger amount of tags (also nodes in the data), but 1000 works so i think 2000 is future-proof
 #define MAX_NODES_IN_ROAD 2000
 
@@ -13,7 +15,7 @@ void buildnode(node_t *awesome, xmlNode *node){
   xmlChar* tmp2 = xmlGetProp(node, (const xmlChar*)"lat");
   xmlChar* tmp3 = xmlGetProp(node, (const xmlChar*)"lon");
   awesome->id = atoi((char*)tmp1);
-  awesome->lattitude = atof((char*)tmp2);
+  awesome->latitude = atof((char*)tmp2);
   awesome->longitude = atof((char*)tmp3);
   free(tmp1);
   free(tmp2);
@@ -125,3 +127,19 @@ void setup(protoroad_t *roads[], node_t *nodes[], char *filename){
   return;
 }
 
+double distance(node_t* node1, node_t* node2){
+  // Antager at der kun bliver udregnet meget korte afstande.
+  // https://en.wikipedia.org/wiki/Geographical_distance#Tunnel_distance
+
+  double deltaX = cos(node2->latitude)*cos(node2->longitude)-cos(node1->latitude)*cos(node1->longitude);
+  double deltaY = cos(node2->latitude)*sin(node2->longitude)-cos(node1->latitude)*sin(node1->longitude);
+  double deltaZ = sin(node2->latitude)-sin(node1->latitude);
+  double D = EARTH_RADIUS*sqrt(pow(deltaX,2)+pow(deltaY,2)+pow(deltaZ,2));
+  return D;
+}
+// double findLength(protoroad_t* road){
+//   double distance = 0;
+//   for(uint i = 1; i < road->nodeAmount; ++i)
+//     distance += distance(road->nodeIds[i-1], road->nodeIds[i]);
+//   return distance;
+// }
