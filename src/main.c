@@ -15,9 +15,9 @@ int main(int arga, char** argb){
   static node_t *nodes[MAXNODES];
   static protoroad_t *roads[MAXROADS];
   for(int i = 0; i < MAXNODES; ++i)
-    nodes[i] = malloc(sizeof(node_t));
+    nodes[i] = calloc(sizeof(node_t), 1);
   for(int i = 0; i < MAXROADS; ++i)
-    roads[i] = malloc(sizeof(protoroad_t));
+    roads[i] = calloc(sizeof(protoroad_t), 1);
   
   
   switch (arga){
