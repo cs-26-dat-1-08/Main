@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libxml/parser.h>
+#include "geodesic.h"
 
 #include "osmlib.h"
 
@@ -95,7 +96,9 @@ int validroad(protoroad_t *awesome, xmlNode *node){
 int compareNodes(const void *a, const void *b){
   nid_t tmp1 = (*(const node_t**)a)->id;
   nid_t tmp2 = (*(const node_t**)b)->id;
-  return tmp1 - tmp2;
+  if(tmp1 > tmp2) return 1;
+  if(tmp1 < tmp2) return -1;
+  return 0;
 }
 
 void buildroad(protoroad_t *awesome, xmlNode *node){
@@ -103,7 +106,7 @@ void buildroad(protoroad_t *awesome, xmlNode *node){
   awesome->id = (nid_t)atoll((char*)tmp1);
   free(tmp1);
   nid_t ids[MAX_NODES_IN_ROAD];
-  u8 count = 0;
+  u64 count = 0;
   for (xmlNode *roadchild = node->children; roadchild; roadchild = roadchild->next){
     if(strcmp((char*)roadchild->name, "nd")) continue;
     xmlChar *tmp2 = xmlGetProp(roadchild, (const xmlChar*)"ref");
@@ -112,7 +115,7 @@ void buildroad(protoroad_t *awesome, xmlNode *node){
     ++count;
   }
   nid_t newNodes[count];
-  for(uint i = 0; i < count; ++i)
+  for(u64 i = 0; i < count; ++i)
     newNodes[i] = ids[i];
   awesome->nodeAmount = count;
   awesome->nodeIds = newNodes;
@@ -142,62 +145,64 @@ void setup(protoroad_t *roads[], node_t *nodes[], char *filename){
     }
   }
 
-  // Datasættet burde være sorteret, men for at være sikker, så kører vi lige qsort.
+  // Datasættet burde være sorteret, da det er sorteret efter ID når man downloader det, men for at være sikker, så kører vi lige qsort.
   qsort(nodes, nodeindex, sizeof(nodes[0]), compareNodes);  
-  
-  for (uint i = 0; i < roadindex; ++i){
-    // findLength(roads[i]);
-    for (uint j = 0; j < roads[i]->nodeAmount; ++j){
-      node_t balls = {roads[i]->nodeIds[j]};
-      node_t *bp = &balls;
-      node_t **foundNode = (node_t**)bsearch(&bp, nodes, nodeindex, sizeof(nodes[0]), compareNodes);
-      if(foundNode == NULL) continue;
-      (*foundNode)->connects[(*foundNode)->amountOfConnects] = roads[i];
-      ++(*foundNode)->amountOfConnects;
-    }
-  }
-
-  /* TODO: Fix below code and make findLength real */
-  
-  // uint count = 0;
-  // for (uint i = 0; i < nodeindex; ++i)
-    // if(nodes[i]->amountOfConnects > 1) ++count;
-  // node_t* newNodes[count];
-  // for (uint i = 0, j = 0; i < nodeindex; ++i){
-    // if(nodes[i]->amountOfConnects <= 1) continue;
-    // newNodes[j] = nodes[i];
-    // ++j;
-  // }
-  // for (uint i = 0; i < count; ++i){
-    // u8 aoc = newNodes[i]->amountOfConnects;
-    // for(u8 j = 0; j < aoc; ++j){
-      // u8 k = 0;
-      // for(;newNodes[i]->connects[j]->nodes[k+1] == NULL; ++k){}
-      // newNodes[i]->connects[j]->nodes[k] = newNodes[i];
-    // }
-  // }
   
   fprintf(stdout, "Total nodes: %lu\n", nodeindex);
   fprintf(stdout, "Total roads: %lu\n", roadindex);
+
+  // TODO: Fix denne SEGV
+  for (uint i = 0; i < roadindex; ++i){
+    // findLength(roads[i]);
+    node_t **fn, *foundNode;
+    for (u64 j = 0; j < roads[i]->nodeAmount; ++j){
+      fn = node_from_id(nodes, nodeindex, roads[i]->nodeIds[j]);
+      if(fn == NULL) continue;
+      foundNode = *fn;
+      foundNode->connects[foundNode->amountOfConnects] = roads[i];
+      ++foundNode->amountOfConnects;
+      fn = NULL;
+    }
+  }
+
+  uint count = 0;
+  for (uint i = 0; i < nodeindex; ++i)
+    if(nodes[i]->amountOfConnects > 1) ++count;
+  node_t* newNodes[count];
+  for (uint i = 0, j = 0; i < nodeindex; ++i){
+    if(nodes[i]->amountOfConnects > 1){
+      newNodes[j] = nodes[i];
+      ++j;
+    }
+  }
+  
+  fprintf(stdout, "Total nodes: %u (Filtered)\n", count);
 
   xmlFreeDoc(document);
   xmlCleanupParser();
   return;
 }
 
-double node_distance(node_t* node1, node_t* node2){
-  // Antager at der kun bliver udregnet meget korte afstande.
-  // https://en.wikipedia.org/wiki/Geographical_distance#Tunnel_distance
-
-  double deltaX = cos(node2->latitude)*cos(node2->longitude)-cos(node1->latitude)*cos(node1->longitude);
-  double deltaY = cos(node2->latitude)*sin(node2->longitude)-cos(node1->latitude)*sin(node1->longitude);
-  double deltaZ = sin(node2->latitude)-sin(node1->latitude);
-  double D = EARTH_RADIUS*sqrt(pow(deltaX,2)+pow(deltaY,2)+pow(deltaZ,2));
+double node_distance(node_t node1, node_t node2){
+  //using https://geographiclib.sourceforge.io/C/doc/standalone.html
+  double a = 6378137.0, f = 1/298.257223563, D;
+  double lat1 = node1.latitude, lon1 = node1.longitude, lat2 = node2.latitude, lon2 = node2.longitude;
+  struct geod_geodesic g;
+  geod_init(&g, a, f);
+  geod_inverse(&g, lat1, lon1, lat2, lon2, &D, 0, 0);
   return D;
 }
-// double findLength(protoroad_t* road){
-  // double distance = 0;
-  // for(uint i = 1; i < road->nodeAmount; ++i)
-    // distance += node_distance(road->nodes[i-1], road->nodes[i]);
-  // return distance;
-// }
+
+node_t **node_from_id(node_t *nodes[], uint size, nid_t id){
+  node_t balls = {.id = id};
+  node_t *bp = &balls;
+  node_t **foundNode = bsearch(&bp, nodes, size, sizeof(nodes[0]), compareNodes);
+  return foundNode;
+}
+
+double findLength(node_t *nodes[], uint size, protoroad_t* road){
+  double distance = 0;
+  for(uint i = 1; i < road->nodeAmount; ++i)
+    distance += node_distance(**node_from_id(nodes, size, road->nodeIds[i-1]), **node_from_id(nodes, size, road->nodeIds[i]));
+  return distance;
+}

@@ -28,6 +28,7 @@ set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
 find_package(LibXml2 REQUIRED)
 include_directories({LIBXML2_INCLUDE_DIR})
 include(cmake/mtest.cmake)
+include(cmake/geographiclib-c.cmake)
 
 add_subdirectory(src)
 enable_testing()

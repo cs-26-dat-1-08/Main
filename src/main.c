@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAXNODES 1609301 /* 1609300 + 1 */
-#define MAXROADS 212230 /* 212229 + 1 */
+#define MAXNODES 2000000 /* 1609300 */
+#define MAXROADS 250000 /* 212229 */
 
 // #define MAXNODES 1000 /* 1609300 + 1 */
 // #define MAXROADS 100 /* 212229 + 1 */

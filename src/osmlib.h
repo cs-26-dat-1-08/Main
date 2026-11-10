@@ -2,7 +2,7 @@
 #include <sys/types.h>
 
 // Max var 19 i aalborg datasæt.
-#define MAX_ROADS_IN_NODE 25
+#define MAX_ROADS_IN_NODE 32
 
 struct protoroad; // Forward declaration
 
@@ -21,9 +21,8 @@ typedef struct node {
 typedef struct protoroad {
   nid_t id;
   u8 prio;
-  u8 nodeAmount;
+  u64 nodeAmount;
   nid_t *nodeIds;
-  // node_t *nodes[MAX_NODES_IN_ROAD];
 } protoroad_t;
 
 typedef struct road {
@@ -34,5 +33,6 @@ typedef struct road {
 } road_t;
 
 void setup(protoroad_t *roads[], node_t *nodes[], char *filename);
-double node_distance(node_t* node1, node_t* node2);
-double findLength(protoroad_t* road);
+double node_distance(node_t node1, node_t node2);
+double findLength(node_t *nodes[], uint size, protoroad_t* road);
+node_t **node_from_id(node_t *nodes[], uint size, nid_t id);
