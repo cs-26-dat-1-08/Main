@@ -16,7 +16,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +25,6 @@
 
 #include "osmlib.h"
 
-#define EARTH_RADIUS 6371009
 // There are a maximum of 2000 nodes per road by the current standards. There can also be a larger amount of tags (also nodes in the data), but 1000 works so i think 2000 is future-proof
 #define MAX_NODES_IN_ROAD 2000
 
@@ -34,7 +32,7 @@ void buildnode(node_t *awesome, xmlNode *node){
   xmlChar* tmp1 = xmlGetProp(node, (const xmlChar*)"id");
   xmlChar* tmp2 = xmlGetProp(node, (const xmlChar*)"lat");
   xmlChar* tmp3 = xmlGetProp(node, (const xmlChar*)"lon");
-  awesome->id = (nid_t)atoll((char*)tmp1);
+  awesome->id = (nid_t)atol((char*)tmp1);
   awesome->latitude = atof((char*)tmp2);
   awesome->longitude = atof((char*)tmp3);
   free(tmp1);
@@ -103,14 +101,14 @@ int compareNodes(const void *a, const void *b){
 
 void buildroad(protoroad_t *awesome, xmlNode *node){
   xmlChar *tmp1 = xmlGetProp(node, (const xmlChar*)"id");
-  awesome->id = (nid_t)atoll((char*)tmp1);
+  awesome->id = (nid_t)atol((char*)tmp1);
   free(tmp1);
   nid_t ids[MAX_NODES_IN_ROAD];
   u64 count = 0;
   for (xmlNode *roadchild = node->children; roadchild; roadchild = roadchild->next){
-    if(strcmp((char*)roadchild->name, "nd")) continue;
+    if(strcmp((char*)roadchild->name, "nd") != 0) continue;
     xmlChar *tmp2 = xmlGetProp(roadchild, (const xmlChar*)"ref");
-    ids[count] = (nid_t)atoll((char*)tmp2);
+    ids[count] = (nid_t)atol((char*)tmp2);
     free(tmp2);
     ++count;
   }
@@ -152,31 +150,38 @@ void setup(protoroad_t *roads[], node_t *nodes[], char *filename){
   fprintf(stdout, "Total roads: %lu\n", roadindex);
 
   // TODO: Fix denne SEGV
-  for (uint i = 0; i < roadindex; ++i){
-    // findLength(roads[i]);
-    node_t **fn, *foundNode;
-    for (u64 j = 0; j < roads[i]->nodeAmount; ++j){
-      fn = node_from_id(nodes, nodeindex, roads[i]->nodeIds[j]);
-      if(fn == NULL) continue;
-      foundNode = *fn;
-      foundNode->connects[foundNode->amountOfConnects] = roads[i];
-      ++foundNode->amountOfConnects;
-      fn = NULL;
-    }
-  }
+  // for (u64 i = 0; i < roadindex; ++i){
+    // findLength(nodes, nodeindex, roads[i]);
+  // }
 
-  uint count = 0;
-  for (uint i = 0; i < nodeindex; ++i)
-    if(nodes[i]->amountOfConnects > 1) ++count;
-  node_t* newNodes[count];
-  for (uint i = 0, j = 0; i < nodeindex; ++i){
-    if(nodes[i]->amountOfConnects > 1){
-      newNodes[j] = nodes[i];
-      ++j;
-    }
-  }
+  // TODO: Lav amountOfConnects og Connects på alle nodes. Malfungerende eksempel er nedenfor
+// void awesome(protoroad_t *road, node_t *nodes[], u64 nodeindex){
+//   node_t **fn, *foundNode;
+//   // findLength(nodes, nodeindex, roads[i]);
+//   for (u64 j = 0; j < road->nodeAmount; ++j){
+//     fn = node_from_id(nodes, nodeindex, road->nodeIds[j]);
+//     if(fn == NULL) continue;
+//     foundNode = *fn;
+//     if(fn == NULL) continue;
+//     foundNode->connects[foundNode->amountOfConnects] = road;
+//     ++foundNode->amountOfConnects;
+//     fn = NULL;
+//   }
+// }
+
+  // TODO: Filtrer yderligere nodes ud. Malfungerende eksempel er nedenfor.
+  // uint count = 0;
+  // for (uint i = 0; i < nodeindex; ++i)
+  //   if(nodes[i]->amountOfConnects > 1) ++count;
+  // node_t* newNodes[count];
+  // for (uint i = 0, j = 0; i < nodeindex; ++i){
+  //   if(nodes[i]->amountOfConnects > 1){
+  //     newNodes[j] = nodes[i];
+  //     ++j;
+  //   }
+  // }
   
-  fprintf(stdout, "Total nodes: %u (Filtered)\n", count);
+  // fprintf(stdout, "Total nodes: %u (Filtered)\n", count);
 
   xmlFreeDoc(document);
   xmlCleanupParser();
@@ -193,16 +198,31 @@ double node_distance(node_t node1, node_t node2){
   return D;
 }
 
-node_t **node_from_id(node_t *nodes[], uint size, nid_t id){
+node_t **node_from_id(node_t *nodes[], u64 size, nid_t id){
+  // node_t **foundNode = NULL;
+  // for(uint i = 0; i < size; ++i){
+  //   if(nodes[i]->id == id) foundNode = &nodes[i];
+  // }
+  
   node_t balls = {.id = id};
   node_t *bp = &balls;
   node_t **foundNode = bsearch(&bp, nodes, size, sizeof(nodes[0]), compareNodes);
+  if (foundNode == NULL) fprintf(stderr, "Could not find node with ID: %lu\n", id);
   return foundNode;
 }
 
-double findLength(node_t *nodes[], uint size, protoroad_t* road){
+double findLength(node_t *nodes[], u64 size, protoroad_t* road){
   double distance = 0;
-  for(uint i = 1; i < road->nodeAmount; ++i)
-    distance += node_distance(**node_from_id(nodes, size, road->nodeIds[i-1]), **node_from_id(nodes, size, road->nodeIds[i]));
+  for(uint i = 1; i < road->nodeAmount; ++i){
+    node_t **tmp1 = node_from_id(nodes, size, road->nodeIds[i-1]);
+    node_t **tmp2 = node_from_id(nodes, size, road->nodeIds[i]);
+    if(tmp1 != NULL && tmp2 != NULL)
+      distance += node_distance(**tmp1, **tmp2);
+    // else {
+    //   printf("Could not find nodes in road %lu\n", road->id);
+    //   printf("  1: %lu & %p\n", road->nodeIds[i-1], tmp1);
+    //   printf("  2: %lu & %p\n", road->nodeIds[i], tmp2);
+    // }
+  }
   return distance;
 }

@@ -13,7 +13,7 @@ typedef i64 nid_t;
 
 typedef struct node {
   nid_t id;
-  struct protoroad *connects[MAX_ROADS_IN_NODE];
+  struct protoroad **connects;
   u64 amountOfConnects;
   double latitude, longitude;
 } node_t;
@@ -34,5 +34,5 @@ typedef struct road {
 
 void setup(protoroad_t *roads[], node_t *nodes[], char *filename);
 double node_distance(node_t node1, node_t node2);
-double findLength(node_t *nodes[], uint size, protoroad_t* road);
-node_t **node_from_id(node_t *nodes[], uint size, nid_t id);
+double findLength(node_t *nodes[], u64 size, protoroad_t* road);
+node_t **node_from_id(node_t *nodes[], u64 size, nid_t id);

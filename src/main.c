@@ -14,8 +14,10 @@ int main(int arga, char** argb){
 
   static node_t *nodes[MAXNODES];
   static protoroad_t *roads[MAXROADS];
-  for(int i = 0; i < MAXNODES; ++i)
+  for(int i = 0; i < MAXNODES; ++i){
     nodes[i] = calloc(sizeof(node_t), 1);
+    nodes[i]->connects = calloc(sizeof(protoroad_t*), MAX_ROADS_IN_NODE);
+  }
   for(int i = 0; i < MAXROADS; ++i)
     roads[i] = calloc(sizeof(protoroad_t), 1);
   
@@ -30,8 +32,10 @@ int main(int arga, char** argb){
   }
   setup(roads, nodes, argb[1]);
 
-  for(int i = 0; i < MAXNODES; ++i)
+  for(int i = 0; i < MAXNODES; ++i){
+    free(nodes[i]->connects);
     free(nodes[i]);
+  }
   for(int i = 0; i < MAXROADS; ++i)
     free(roads[i]);
 
