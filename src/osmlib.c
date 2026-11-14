@@ -1,6 +1,11 @@
 /*
     <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2026 Asger Peter Fuglsbjerg
+    Copyright (C) 2026
+      Anas Ahmed Yusuf
+      Asger Peter Fuglsbjerg
+      Jonatan Bjørn Rasmussen
+      Magnus Hjortshøj Jørgensen
+      Nikolaj Frederik Faurboe Horn
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -25,7 +30,7 @@
 
 #include "osmlib.h"
 
-// There are a maximum of 2000 nodes per road by the current standards. There can also be a larger amount of tags (also nodes in the data), but 1000 works so i think 2000 is future-proof
+// There are a maximum of 2000 nodes per road by the current standards. There can also be a larger amount of tags (also nodes in the data), but 1000 works so i think 2000 is VERY future-proof
 #define MAX_NODES_IN_ROAD 2000
 
 void buildnode(node_t *awesome, xmlNode *node){
@@ -40,7 +45,7 @@ void buildnode(node_t *awesome, xmlNode *node){
   free(tmp3);
 }
 
-int validroad(protoroad_t *awesome, xmlNode *node){
+int validroad(road_t *awesome, xmlNode *node){
   for (xmlNode *roadchild = node->children; roadchild; roadchild = roadchild->next){
     if(strcmp((char*)roadchild->name, "tag")) continue;
     xmlChar *tmp1 = xmlGetProp(roadchild, (const xmlChar*)"k");
@@ -99,7 +104,7 @@ int compareNodes(const void *a, const void *b){
   return 0;
 }
 
-void buildroad(protoroad_t *awesome, xmlNode *node){
+void buildroad(road_t *awesome, xmlNode *node){
   xmlChar *tmp1 = xmlGetProp(node, (const xmlChar*)"id");
   awesome->id = (nid_t)atol((char*)tmp1);
   free(tmp1);
@@ -120,7 +125,7 @@ void buildroad(protoroad_t *awesome, xmlNode *node){
   return;
 }
 
-void setup(protoroad_t *roads[], node_t *nodes[], char *filename){
+void setup(road_t *roads[], node_t *nodes[], char *filename){
   u64 nodeindex = 0, roadindex = 0;
   
   // xmlDoc *document = xmlReadFile(filename, NULL, 0);
@@ -198,6 +203,7 @@ double node_distance(node_t node1, node_t node2){
   return D;
 }
 
+// TODO: Doesn't seem to work properly.
 node_t **node_from_id(node_t *nodes[], u64 size, nid_t id){
   // node_t **foundNode = NULL;
   // for(uint i = 0; i < size; ++i){
@@ -207,11 +213,11 @@ node_t **node_from_id(node_t *nodes[], u64 size, nid_t id){
   node_t balls = {.id = id};
   node_t *bp = &balls;
   node_t **foundNode = bsearch(&bp, nodes, size, sizeof(nodes[0]), compareNodes);
-  if (foundNode == NULL) fprintf(stderr, "Could not find node with ID: %lu\n", id);
+  if (foundNode == NULL) fprintf(stderr, "Could not find node with ID: %lu\n", id); // Temporary debug information
   return foundNode;
 }
 
-double findLength(node_t *nodes[], u64 size, protoroad_t* road){
+double findLength(node_t *nodes[], u64 size, road_t* road){
   double distance = 0;
   for(uint i = 1; i < road->nodeAmount; ++i){
     node_t **tmp1 = node_from_id(nodes, size, road->nodeIds[i-1]);
