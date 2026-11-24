@@ -52,7 +52,8 @@ typedef struct node {
  */
 typedef struct road {
   nid_t id;
-  u8 is_salted, prio, djikstra_tmp;
+  u8 is_salted, djikstra, score;
+  u8 prio;
   u64 nodeAmount;
   nid_t *nodeIds;
   double length;
