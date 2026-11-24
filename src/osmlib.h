@@ -42,7 +42,7 @@ typedef i64 nid_t;
  */
 typedef struct node {
   nid_t id;
-  struct protoroad **connects;
+  struct protoroad **connects; // TOTTORO: Check if it works.
   u64 amountOfConnects;
   double latitude, longitude;
 } node_t;
@@ -52,11 +52,10 @@ typedef struct node {
  */
 typedef struct road {
   nid_t id;
-  u8 is_salted, prio;
+  u8 is_salted, prio, djikstra_tmp;
   u64 nodeAmount;
   nid_t *nodeIds;
   double length;
-  // node_t *startNode, *endNode; // Depreciated, use nodeIds[0] and nodeIds[nodeAmount-1] instead.
 } road_t;
 
 /*
@@ -67,6 +66,7 @@ typedef struct road {
  * @param[in] *char char-array (String) to a .osm file that is read from.
  */
 void setup(road_t *roads[], node_t *nodes[], char *filename);
+
 /*
  * Finds the distance between two nodes
  *

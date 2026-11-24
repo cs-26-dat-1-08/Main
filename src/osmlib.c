@@ -154,10 +154,11 @@ void setup(road_t *roads[], node_t *nodes[], char *filename){
   fprintf(stdout, "Total nodes: %lu\n", nodeindex);
   fprintf(stdout, "Total roads: %lu\n", roadindex);
 
-  // TODO: Fix denne SEGV
-  // for (u64 i = 0; i < roadindex; ++i){
-    // findLength(nodes, nodeindex, roads[i]);
-  // }
+  // TOTTORO: Fix dette
+  for (u64 i = 0; i < roadindex; ++i){
+    roads[i]->length = findLength(nodes, nodeindex, roads[i]);
+    fprintf(stdout, "%li: %lf\n", roads[i]->id, roads[i]->length);
+  }
 
   // TODO: Lav amountOfConnects og Connects på alle nodes. Malfungerende eksempel er nedenfor
 // void awesome(protoroad_t *road, node_t *nodes[], u64 nodeindex){
@@ -213,7 +214,7 @@ node_t **node_from_id(node_t *nodes[], u64 size, nid_t id){
   node_t balls = {.id = id};
   node_t *bp = &balls;
   node_t **foundNode = bsearch(&bp, nodes, size, sizeof(nodes[0]), compareNodes);
-  if (foundNode == NULL) fprintf(stderr, "Could not find node with ID: %lu\n", id); // Temporary debug information
+  // if (foundNode == NULL) fprintf(stderr, "Could not find node with ID: %lu\n", id); // Temporary debug information
   return foundNode;
 }
 
@@ -224,11 +225,6 @@ double findLength(node_t *nodes[], u64 size, road_t* road){
     node_t **tmp2 = node_from_id(nodes, size, road->nodeIds[i]);
     if(tmp1 != NULL && tmp2 != NULL)
       distance += node_distance(**tmp1, **tmp2);
-    // else {
-    //   printf("Could not find nodes in road %lu\n", road->id);
-    //   printf("  1: %lu & %p\n", road->nodeIds[i-1], tmp1);
-    //   printf("  2: %lu & %p\n", road->nodeIds[i], tmp2);
-    // }
   }
   return distance;
 }
