@@ -32,6 +32,8 @@
 
 // There are a maximum of 2000 nodes per road by the current standards. There can also be a larger amount of tags (also nodes in the data), but 1000 works so i think 2000 is VERY future-proof
 #define MAX_NODES_IN_ROAD 2000
+#define CONST_A 6378137.0f
+#define CONST_F 1/298.257223563f
 
 void buildnode(node_t *awesome, xmlNode *node){
   xmlChar* tmp1 = xmlGetProp(node, (const xmlChar*)"id");
@@ -196,10 +198,10 @@ void setup(road_t *roads[], node_t *nodes[], char *filename){
 
 double node_distance(node_t node1, node_t node2){
   //using https://geographiclib.sourceforge.io/C/doc/standalone.html
-  double a = 6378137.0, f = 1/298.257223563, D;
+  double D;
   double lat1 = node1.latitude, lon1 = node1.longitude, lat2 = node2.latitude, lon2 = node2.longitude;
   struct geod_geodesic g;
-  geod_init(&g, a, f);
+  geod_init(&g, CONST_A, CONST_F);
   geod_inverse(&g, lat1, lon1, lat2, lon2, &D, 0, 0);
   return D;
 }
