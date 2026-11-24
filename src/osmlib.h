@@ -33,9 +33,11 @@ struct protoroad; // Forward declaration
  * typedefs that make it much easier to control the int types.
  */
 typedef uint_fast8_t u8;
+typedef uint_fast32_t u32;
 typedef uint_fast64_t u64;
+typedef int_fast32_t i32;
 typedef int_fast64_t i64;
-typedef i64 nid_t;
+typedef i64 nid_t; // Defines the type for the ids.
 
 /*
  * Struct that has all of the necesaary information about a node.
@@ -52,7 +54,8 @@ typedef struct node {
  */
 typedef struct road {
   nid_t id;
-  u8 is_salted, djikstra, score;
+  u8 is_salted, djikstra;
+  i64 score;
   u8 prio;
   u64 nodeAmount;
   nid_t *nodeIds;
